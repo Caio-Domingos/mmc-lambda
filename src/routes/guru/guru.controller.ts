@@ -2,10 +2,14 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { GuruService } from './guru.service';
 import { GuruSubscriptionPaid } from './interface/Guru-Item';
 import { Beneficiary } from 'src/core/models/Beneficiary';
+import { EmailService } from 'src/core/services/Email.service';
 
 @Controller('guru')
 export class GuruController {
-  constructor(private readonly guruService: GuruService) {}
+  constructor(
+    private readonly guruService: GuruService,
+    private emailService: EmailService,
+  ) {}
 
   @Post('new-client')
   async newClient(@Body() body: GuruSubscriptionPaid) {
@@ -20,12 +24,7 @@ export class GuruController {
         body.subscriber.name,
         { phone: body.subscriber.phone_number, cpf: body.subscriber.doc }
     */
-    const itemsList = [
-      '5f9b3b4b9b7c7a0011b8b3a5',
-      '5f9b3b4b9b7c7a0011b8b3a6',
-      '5f9b3b4b9b7c7a0011b8b3a7',
-      'SBCLUB001',
-    ];
+    const itemsList = ['1687547865'];
 
     if (itemsList.includes(`${body.product.marketplace_id}`)) {
       // Se sim
@@ -64,13 +63,37 @@ export class GuruController {
       console.log(resBenefeciary);
 
       if (resBenefeciary.success) {
+        console.log('Novo beneficiario criado com sucesso');
         // Enviar email de boas vindas
+        await this.emailService.sendWelcomeEmail(
+          body.subscriber.email,
+          body.subscriber.name,
+          body.subscriber.phone_number,
+        );
       } else {
+        console.log('Erro ao criar novo beneficiario');
         // Enviar email de erro para o time
+        console.log('Enviando email para o time de suporte');
+        const emailSupport = this.emailService.sendSupportEmail(
+          body.subscriber.email,
+          body.subscriber.name,
+          body.subscriber.phone_number,
+        );
+
+        // Enviar email de erro o cliente pedindo para esperar e se não receber entrar em contato via email
+        console.log('Enviando email para o cliente');
+        const emailClient = this.emailService.sendErrorClientEmail(
+          body.subscriber.email,
+          body.subscriber.name,
+        );
+
+        await Promise.all([emailSupport, emailClient]);
+
         console.log(
           'Erro ao criar novo beneficiario no CPF =>',
           newBeneficiary.cpf,
         );
+        // contato@mamaecompleta.com.br
       }
     } else {
       // Não realizar nenhuma operação
@@ -81,10 +104,16 @@ export class GuruController {
     }
 
     // Finalizar operação
-
+    console.log('Finalizando operação');
     return {
       ok: true,
       message: 'success',
     };
+  }
+  @Post('inactive-client')
+  async inactiveClient(@Body() body: GuruSubscriptionPaid) {
+    // To Do
+
+    return { ok: true };
   }
 }
