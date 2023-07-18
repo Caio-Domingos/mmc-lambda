@@ -15,6 +15,7 @@ export class EmailService {
     const templateWelcome = welcomeRapidocTemplate
       .replace('{{NOME}}', name.toString())
       .replace('{{EMAIL}}', email.toString())
+      .replace('{{EMAIL}}', email.toString())
       .replace('{{SENHA}}', last4DigitsPhone.toString());
 
     const url =

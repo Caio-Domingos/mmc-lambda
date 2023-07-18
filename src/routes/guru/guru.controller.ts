@@ -3,12 +3,14 @@ import { GuruService } from './guru.service';
 import { GuruSubscriptionPaid } from './interface/Guru-Item';
 import { Beneficiary } from 'src/core/models/Beneficiary';
 import { EmailService } from 'src/core/services/Email.service';
+import { FileService } from 'src/core/services/File.service';
 
 @Controller('guru')
 export class GuruController {
   constructor(
     private readonly guruService: GuruService,
     private emailService: EmailService,
+    private fileService: FileService,
   ) {}
 
   @Post('new-client')
@@ -25,6 +27,29 @@ export class GuruController {
         { phone: body.subscriber.phone_number, cpf: body.subscriber.doc }
     */
     const itemsList = ['1687547865'];
+    // Checar se a compra já foi processada no arquivo txt
+    console.log('Checando se a compra já foi processada');
+    const pathname = 'guru';
+    const filename = `beneficiaries`;
+
+    const fileContent = await this.fileService.getFile(pathname, filename);
+    console.log('Conteudo do arquivo => ', fileContent);
+
+    if (fileContent.includes(`${body.id}`)) {
+      // Se sim
+      console.log('Compra já processada');
+      return {
+        ok: true,
+        message: 'success',
+      };
+    } else {
+      console.log('Compra ainda não processada');
+      // Salvar os dados do beneficiario em um arquivo txt
+      console.log('Salvando compra em um arquivo txt');
+
+      const content = `${fileContent}${body.id}\n`;
+      await this.fileService.createTxtFile(pathname, filename, content);
+    }
 
     if (itemsList.includes(`${body.product.marketplace_id}`)) {
       // Se sim
@@ -60,6 +85,7 @@ export class GuruController {
       const resBenefeciary = await this.guruService.createNewBeneficiary(
         newBeneficiary,
       );
+      // const resBenefeciary = { success: true };
       console.log(resBenefeciary);
 
       if (resBenefeciary.success) {

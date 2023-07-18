@@ -2,9 +2,9 @@
 
 # Configuração
 DOCKERHUB_USER="thinklesshouse"
-FRONTEND_DIR="tay-training-frontend"
-BACKEND_DIR="tay-training-backend"
-DB_DIR="tay-training-database"
+# FRONTEND_DIR="tay-training-frontend"
+BACKEND_DIR="../"
+# DB_DIR="tay-training-database"
 
 # Função de animação
 spinner() {
@@ -38,22 +38,22 @@ read -p "Qual ambiente de desenvolvimento? (production): " BUILD_ENV
 BUILD_ENV=${BUILD_ENV:-production}
 
 # Atualizar os repositórios
-echo -n "Atualizando o repositório frontend..."
-start_time=$(date +%s)
-(cd $FRONTEND_DIR && npm run build -- --configuration $BUILD_ENV >/dev/null 2>&1) & spinner
-(cd $FRONTEND_DIR && git add . >/dev/null 2>&1) & spinner
-(cd $FRONTEND_DIR && git commit -m "Atualizando dist" >/dev/null 2>&1) & spinner
-(cd $FRONTEND_DIR && git push >/dev/null 2>&1) & spinner
-end_time=$(date +%s)
-duration=$((end_time - start_time))
-check_success $? $duration
+# echo -n "Atualizando o repositório frontend..."
+# start_time=$(date +%s)
+# (cd $FRONTEND_DIR && npm run build -- --configuration $BUILD_ENV >/dev/null 2>&1) & spinner
+# (cd $FRONTEND_DIR && git add . >/dev/null 2>&1) & spinner
+# (cd $FRONTEND_DIR && git commit -m "Atualizando dist" >/dev/null 2>&1) & spinner
+# (cd $FRONTEND_DIR && git push >/dev/null 2>&1) & spinner
+# end_time=$(date +%s)
+# duration=$((end_time - start_time))
+# check_success $? $duration
 
 echo -n "Atualizando o repositório backend..."
 start_time=$(date +%s)
 (cd $BACKEND_DIR && npm run build:$BUILD_ENV  >/dev/null 2>&1) & spinner
-(cd $BACKEND_DIR && git add . >/dev/null 2>&1) & spinner
-(cd $BACKEND_DIR && git commit -m "Atualizando dist" >/dev/null 2>&1) & spinner
-(cd $BACKEND_DIR && git push >/dev/null 2>&1) & spinner
+# (cd $BACKEND_DIR && git add . >/dev/null 2>&1) & spinner
+# (cd $BACKEND_DIR && git commit -m "Atualizando dist" >/dev/null 2>&1) & spinner
+# (cd $BACKEND_DIR && git push >/dev/null 2>&1) & spinner
 end_time=$(date +%s)
 duration=$((end_time - start_time))
 check_success $? $duration
@@ -67,29 +67,29 @@ echo "Configurando as plataformas para build..."
 docker buildx inspect --bootstrap
 docker buildx install
 
-# Criar uma imagem nova do Frontend para linux/amd64 e enviar para o DockerHub
-echo -n "Criando a imagem do frontend (linux/amd64)..."
-start_time=$(date +%s)
-(cd $FRONTEND_DIR && docker buildx build --push --platform linux/amd64 -t $DOCKERHUB_USER/tay-frontend:amd .)
-# docker push $DOCKERHUB_USER/tay-frontend:amd 
-end_time=$(date +%s)
-duration=$((end_time - start_time))
-check_success $? $duration
+# # Criar uma imagem nova do Frontend para linux/amd64 e enviar para o DockerHub
+# echo -n "Criando a imagem do frontend (linux/amd64)..."
+# start_time=$(date +%s)
+# (cd $FRONTEND_DIR && docker buildx build --push --platform linux/amd64 -t $DOCKERHUB_USER/tay-frontend:amd .)
+# # docker push $DOCKERHUB_USER/tay-frontend:amd 
+# end_time=$(date +%s)
+# duration=$((end_time - start_time))
+# check_success $? $duration
 
-# Criar uma imagem nova do Frontend para linux/arm64/v8 e enviar para o DockerHub
-echo -n "Criando a imagem do frontend (linux/arm64/v8)..."
-start_time=$(date +%s)
-(cd $FRONTEND_DIR && docker buildx build --push -t $DOCKERHUB_USER/tay-frontend:arm .)
-# docker push $DOCKERHUB_USER/tay-frontend:arm 
-end_time=$(date +%s)
-duration=$((end_time - start_time))
-check_success $? $duration
+# # Criar uma imagem nova do Frontend para linux/arm64/v8 e enviar para o DockerHub
+# echo -n "Criando a imagem do frontend (linux/arm64/v8)..."
+# start_time=$(date +%s)
+# (cd $FRONTEND_DIR && docker buildx build --push -t $DOCKERHUB_USER/tay-frontend:arm .)
+# # docker push $DOCKERHUB_USER/tay-frontend:arm 
+# end_time=$(date +%s)
+# duration=$((end_time - start_time))
+# check_success $? $duration
 
 # Criar uma imagem nova do Backend para linux/amd64 e enviar para o DockerHub
 echo -n "Criando a imagem do backend (linux/amd64)..."
 start_time=$(date +%s)
-(cd $BACKEND_DIR && docker buildx build --push --platform linux/amd64 -t $DOCKERHUB_USER/tay-backend:amd .)
-# docker push $DOCKERHUB_USER/tay-backend:amd 
+(cd $BACKEND_DIR && docker buildx build --push --platform linux/amd64 -t $DOCKERHUB_USER/mmc-server:amd .)
+# docker push $DOCKERHUB_USER/mmc-server:amd 
 end_time=$(date +%s)
 duration=$((end_time - start_time))
 check_success $? $duration
@@ -97,26 +97,26 @@ check_success $? $duration
 # Criar uma imagem nova do Backend para linux/arm64/v8 e enviar para o DockerHub
 echo -n "Criando a imagem do backend (linux/arm64/v8)..."
 start_time=$(date +%s)
-(cd $BACKEND_DIR && docker buildx build --push -t $DOCKERHUB_USER/tay-backend:arm .)
-# docker push $DOCKERHUB_USER/tay-backend:arm 
+(cd $BACKEND_DIR && docker buildx build --push -t $DOCKERHUB_USER/mmc-server:arm .)
+# docker push $DOCKERHUB_USER/mmc-server:arm 
 end_time=$(date +%s)
 duration=$((end_time - start_time))
 check_success $? $duration
 
-# Criar uma imagem nova do Banco de Dados para linux/amd64 e enviar para o DockerHub
-echo -n "Criando a imagem do banco de dados (linux/amd64)..."
-start_time=$(date +%s)
-(cd $DB_DIR && docker buildx build --push --platform linux/amd64 -t $DOCKERHUB_USER/tay-db:amd .)
-# docker push $DOCKERHUB_USER/tay-db:amd 
-end_time=$(date +%s)
-duration=$((end_time - start_time))
-check_success $? $duration
+# # Criar uma imagem nova do Banco de Dados para linux/amd64 e enviar para o DockerHub
+# echo -n "Criando a imagem do banco de dados (linux/amd64)..."
+# start_time=$(date +%s)
+# (cd $DB_DIR && docker buildx build --push --platform linux/amd64 -t $DOCKERHUB_USER/tay-db:amd .)
+# # docker push $DOCKERHUB_USER/tay-db:amd 
+# end_time=$(date +%s)
+# duration=$((end_time - start_time))
+# check_success $? $duration
 
-# Criar uma imagem nova do Banco de Dados para linux/arm64/v8 e enviar para o DockerHub
-echo -n "Criando a imagem do banco de dados (linux/arm64/v8)..."
-start_time=$(date +%s)
-(cd $DB_DIR && docker buildx build --push -t $DOCKERHUB_USER/tay-db:arm .)
-# docker push $DOCKERHUB_USER/tay-db:arm 
-end_time=$(date +%s)
-duration=$((end_time - start_time))
-check_success $? $duration
+# # Criar uma imagem nova do Banco de Dados para linux/arm64/v8 e enviar para o DockerHub
+# echo -n "Criando a imagem do banco de dados (linux/arm64/v8)..."
+# start_time=$(date +%s)
+# (cd $DB_DIR && docker buildx build --push -t $DOCKERHUB_USER/tay-db:arm .)
+# # docker push $DOCKERHUB_USER/tay-db:arm 
+# end_time=$(date +%s)
+# duration=$((end_time - start_time))
+# check_success $? $duration

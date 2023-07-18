@@ -29,6 +29,35 @@ sudo service nginx start
 sudo chkconfig nginx on
 sudo service nginx stop
 
+echo "
+server {
+    listen 80;
+    server_name $VAR_1;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name $VAR_1;
+
+    ssl_certificate /root/.acme.sh/$VAR_1/fullchain.cer;
+    ssl_certificate_key /root/.acme.sh/$VAR_1/$VAR_1.key;
+
+    location / {
+        proxy_pass http://localhost:$VAR_2;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+    location /api {
+        proxy_pass http://localhost:$VAR_3;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+"
+
 # Executar os comandos como root
 
 # Instalar pacotes de agendamento
@@ -80,4 +109,4 @@ sudo service nginx stop
 
 
 # Reiniciar o Nginx
-# sudo service nginx restart
+# e

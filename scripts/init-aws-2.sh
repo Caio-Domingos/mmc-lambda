@@ -20,29 +20,3 @@ export NVM_DIR="$HOME/.nvm"
 nvm --version
 nvm install --lts
 node --version
-
-# Configurando o espaço de trabalho
-
-# Configuração
-FRONTEND_REPO="https://github.com/Caio-Domingos/tay-training-frontend.git"
-BACKEND_REPO="https://github.com/Caio-Domingos/tay-training-backend.git"
-FRONTEND_DIR="tay-training-frontend"
-BACKEND_DIR="tay-training-backend"
-
-# Clona os repositórios
-echo "Clonando os repositórios"
-
-echo "Clonando o repositório frontend..."
-cd $FRONTEND_DIR
-git clone $FRONTEND_REPO
-cd $FRONTEND_DIR
-npm install
-cd ..
-
-echo "Clonando o repositório backend..."
-cd $BACKEND_DIR
-git clone $BACKEND_REPO
-cd $BACKEND_DIR
-npm install
-cd ..
-
