@@ -4,6 +4,7 @@ import { GuruSubscriptionPaid } from './interface/Guru-Item';
 import { Beneficiary } from 'src/core/models/Beneficiary';
 import { EmailService } from 'src/core/services/Email.service';
 import { FileService } from 'src/core/services/File.service';
+import { create } from 'domain';
 
 @Controller('guru')
 export class GuruController {
@@ -19,6 +20,7 @@ export class GuruController {
       'New Client Route => Atual Time DD/MM/YYYY HH:MM:SS',
       new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     );
+    console.log('Compra com ID => ', body.id);
     // Checar se a compra é valida
     // Checar se o item é um dos validos para gerar um novo cliente
     /*
@@ -42,16 +44,18 @@ export class GuruController {
         ok: true,
         message: 'success',
       };
-    } else {
-      console.log('Compra ainda não processada');
-      // Salvar os dados do beneficiario em um arquivo txt
-      console.log('Salvando compra em um arquivo txt');
-
-      const content = `${fileContent}${body.id}\n`;
-      await this.fileService.createTxtFile(pathname, filename, content);
     }
+    console.log('Compra ainda não processada');
+    // Salvar os dados do beneficiario em um arquivo txt
+    console.log('Salvando compra em um arquivo txt');
 
+    const content = `${fileContent}${body.id}\n`;
+    await this.fileService.createTxtFile(pathname, filename, content);
+
+    console.log('Checando se o item é um dos validos');
     if (itemsList.includes(`${body.product.marketplace_id}`)) {
+      console.log('Item é um dos validos');
+      console.log('Iniciando processo de criação do beneficiario...');
       // Se sim
       // Criar um novo objeto beneficiario
 
@@ -82,11 +86,7 @@ export class GuruController {
       console.log('Novo Beneficiario => ', newBeneficiary);
 
       // Enviar para a API do aplicativo
-      const resBenefeciary = await this.guruService.createNewBeneficiary(
-        newBeneficiary,
-      );
-      // const resBenefeciary = { success: true };
-      console.log(resBenefeciary);
+      const resBenefeciary = await this.checkBeneficiary(newBeneficiary);
 
       if (resBenefeciary.success) {
         console.log('Novo beneficiario criado com sucesso');
@@ -136,6 +136,57 @@ export class GuruController {
       message: 'success',
     };
   }
+  private async checkBeneficiary(newBeneficiary: Beneficiary) {
+    // Checar se existe um beneficiario com o mesmo CPF/Email
+    console.log('Checando se existe um beneficiario com o mesmo CPF/Email');
+
+    try {
+      const resBenefeciary = await this.guruService.getBeneficiary(
+        newBeneficiary,
+      );
+
+      const ret: any = { success: false, error: false };
+      if (resBenefeciary.beneficiary && resBenefeciary.beneficiary.uuid) {
+        console.log('Beneficiario já existe');
+        const updateRes = await this.guruService.activeBeneficiary(
+          resBenefeciary.beneficiary.uuid,
+        );
+
+        if (updateRes.success) {
+          console.log('Beneficiario ativado com sucesso');
+          ret.success = true;
+        } else {
+          console.log('Erro ao ativar beneficiario', updateRes);
+          ret.error = true;
+        }
+      } else {
+        console.log('Beneficiario não existe pelo CPF, criando um novo');
+        const createRes = await this.guruService.createNewBeneficiary(
+          newBeneficiary,
+        );
+        if (createRes.success) {
+          console.log('Beneficiario criado com sucesso');
+          ret.success = true;
+        } else {
+          console.log('Erro ao criar beneficiario', createRes);
+          // const updateRes = await this.guruService.activeBeneficiary(
+          //   resBenefeciary.beneficiary.uuid,
+          // );
+
+          // if (updateRes.success) {
+          //   ret.success = true;
+          // } else {
+          ret.error = true;
+          // }
+        }
+      }
+
+      return ret;
+    } catch (error) {
+      return { error: true };
+    }
+  }
+
   @Post('inactive-client')
   async inactiveClient(@Body() body: GuruSubscriptionPaid) {
     // To Do
